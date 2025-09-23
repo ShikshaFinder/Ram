@@ -4,7 +4,7 @@ import Navbar from "../components/navbar";
 import { type AppProps } from "next/app";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 import { SessionContextProvider, Session } from "@supabase/auth-helpers-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AuthContextProvider from "@/context";
 import Footer from "../components/footer";
 import Head from "next/head";
@@ -29,6 +29,30 @@ export default function App({
   };
 
   const theme = extendTheme({ config });
+
+  // Clear service worker cache on app load to fix routing issues
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      // Clear all caches
+      caches
+        .keys()
+        .then(function (cacheNames) {
+          return Promise.all(
+            cacheNames.map(function (cacheName) {
+              console.log("Deleting cache:", cacheName);
+              return caches.delete(cacheName);
+            })
+          );
+        })
+        .then(function () {
+          console.log("All caches cleared");
+          // Force reload to get fresh content
+          if (window.location.pathname.includes("/products/")) {
+            window.location.reload();
+          }
+        });
+    }
+  }, []);
 
   return (
     <>
